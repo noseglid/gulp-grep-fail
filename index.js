@@ -18,7 +18,6 @@ function grepFailPlugin (predicates) {
   return through.obj(function (file, enc, cb) {
 
     if (file.isBuffer()) {
-      console.log('its a buffer');
       predicates.forEach(function (predicate) {
         if (-1 !== buffertools.indexOf(file.contents, predicate)) {
           cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' contains \'%s\'.', file.path, predicate)));
@@ -26,7 +25,6 @@ function grepFailPlugin (predicates) {
       }.bind(this));
       cb(null, file);
     } else if (file.isStream()) {
-      console.log('its a stream');
       file.contents.on('data', function (data) {
         predicates.forEach(function (predicate) {
           if (-1 !== buffertools.indexOf(data, predicate)) {
