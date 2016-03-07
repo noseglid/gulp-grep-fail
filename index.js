@@ -8,9 +8,12 @@ var PluginError = gutil.PluginError;
 
 var PLUGIN_NAME = 'gulp-grep-fail';
 
-function grepFailPlugin (predicates) {
+function grepFailPlugin (predicates, options) {
   if (!predicates) {
     throw new PluginError(PLUGIN_NAME, 'No predicates specified.');
+  }
+  if (!options) {
+    options = {};
   }
 
   predicates = Array.isArray(predicates) ? predicates : [ predicates ];
@@ -19,17 +22,24 @@ function grepFailPlugin (predicates) {
 
     if (file.isBuffer()) {
       predicates.forEach(function (predicate) {
-        if (-1 !== buffertools.indexOf(file.contents, predicate)) {
+        var foundInBuffer = (buffertools.indexOf(file.contents, predicate) !== -1);
+        if (foundInBuffer && !options.inverse) {
           cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' contains \'%s\'.', file.path, predicate)));
+        } else if (!foundInBuffer && options.inverse) {
+          cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' does not contain \'%s\'.', file.path, predicate)));
         }
       }.bind(this));
       cb(null, file);
     } else if (file.isStream()) {
       file.contents.on('data', function (data) {
         predicates.forEach(function (predicate) {
-          if (-1 !== buffertools.indexOf(data, predicate)) {
+          var foundInStream = (buffertools.indexOf(data, predicate) !== -1);
+          if (foundInStream && !options.inverse) {
             file.contents.removeAllListeners('end');
             cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' contains \'%s\'.', file.path, predicate)));
+          } else if (!foundInStream && options.inverse) {
+            file.contents.removeAllListeners('end');
+            cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' does not contain \'%s\'.', file.path, predicate)));
           }
         }.bind(this));
       });
