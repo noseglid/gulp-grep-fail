@@ -21,31 +21,39 @@ function grepFailPlugin (predicates, options) {
   return through.obj(function (file, enc, cb) {
 
     if (file.isBuffer()) {
-      predicates.forEach(function (predicate) {
+      var hasFailed = predicates.some(function (predicate) {
         var foundInBuffer = (buffertools.indexOf(file.contents, predicate) !== -1);
         if (foundInBuffer && !options.inverse) {
           cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' contains \'%s\'.', file.path, predicate)));
+          return true
         } else if (!foundInBuffer && options.inverse) {
           cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' does not contain \'%s\'.', file.path, predicate)));
+          return true
         }
       }.bind(this));
-      cb(null, file);
+      if (false === hasFailed) {
+        cb(null, file);
+      }
     } else if (file.isStream()) {
-      file.contents.on('data', function (data) {
-        predicates.forEach(function (predicate) {
+      var hasFailed = file.contents.on('data', function (data) {
+        predicates.some(function (predicate) {
           var foundInStream = (buffertools.indexOf(data, predicate) !== -1);
           if (foundInStream && !options.inverse) {
             file.contents.removeAllListeners('end');
             cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' contains \'%s\'.', file.path, predicate)));
+            return true
           } else if (!foundInStream && options.inverse) {
             file.contents.removeAllListeners('end');
             cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' does not contain \'%s\'.', file.path, predicate)));
+            return true
           }
         }.bind(this));
       });
 
       file.contents.on('end', function () {
-        cb(null, file);
+        if (hasFailed === false) {
+          cb(null, file);
+        }
       });
     }
   });
