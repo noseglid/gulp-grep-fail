@@ -38,7 +38,7 @@ Grep through a file where you expect a specific version number to appear.
 `grepFail(predicates, [options])`
 
   * **predicates** `(string|array)` string(s) to grep for and fail if they exist
-  * **options.expectMatch** `(boolean) - optional` default behaviour is to throw an error if a match is found. Optionally, you can set this param to true so that it fails if it is expecting values to match.
+  * **options.inverse** `(boolean) - optional` default behaviour is to throw an error if a match is found. Optionally, you can set this param to true so that it fails if it is expecting values to match.
 
 ## License
 
