@@ -30,7 +30,7 @@ Grep through a file where you expect a specific version number to appear.
 
     gulp.task('default', function () {
       return gulp.src('foo.js')
-        .pipe(grepFail('123', {expectMatch: true}));
+        .pipe(grepFail('123', {inverse: true}));
     });
 
 ## API

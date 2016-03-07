@@ -13,9 +13,7 @@ function grepFailPlugin (predicates, options) {
     throw new PluginError(PLUGIN_NAME, 'No predicates specified.');
   }
   if (!options) {
-    options = {
-      expectMatch: false;
-    };
+    options = {};
   }
 
   predicates = Array.isArray(predicates) ? predicates : [ predicates ];
@@ -25,9 +23,9 @@ function grepFailPlugin (predicates, options) {
     if (file.isBuffer()) {
       predicates.forEach(function (predicate) {
         var foundInBuffer = (buffertools.indexOf(file.contents, predicate) !== -1);
-        if (foundInBuffer && !options.expectMatch) {
+        if (foundInBuffer && !options.inverse) {
           cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' contains \'%s\'.', file.path, predicate)));
-        } else if (!foundInBuffer && options.expectMatch) {
+        } else if (!foundInBuffer && options.inverse) {
           cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' does not contain \'%s\'.', file.path, predicate)));
         }
       }.bind(this));
@@ -36,10 +34,10 @@ function grepFailPlugin (predicates, options) {
       file.contents.on('data', function (data) {
         predicates.forEach(function (predicate) {
           var foundInStream = (buffertools.indexOf(data, predicate) !== -1);
-          if (foundInStream && !expectMatch) {
+          if (foundInStream && !options.inverse) {
             file.contents.removeAllListeners('end');
             cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' contains \'%s\'.', file.path, predicate)));
-          } else if (!foundInStream && expectMatch) {
+          } else if (!foundInStream && options.inverse) {
             file.contents.removeAllListeners('end');
             cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' does not contain \'%s\'.', file.path, predicate)));
           }
