@@ -12,9 +12,7 @@ function grepFailPlugin (predicates, options) {
   if (!predicates) {
     throw new PluginError(PLUGIN_NAME, 'No predicates specified.');
   }
-  if (!options) {
-    options = {};
-  }
+  options = options || {};
 
   predicates = Array.isArray(predicates) ? predicates : [ predicates ];
 
@@ -35,8 +33,9 @@ function grepFailPlugin (predicates, options) {
         cb(null, file);
       }
     } else if (file.isStream()) {
-      var hasFailed = file.contents.on('data', function (data) {
-        predicates.some(function (predicate) {
+      var hasFailed = false
+      file.contents.on('data', function (data) {
+        hasFailed = predicates.some(function (predicate) {
           var foundInStream = (buffertools.indexOf(data, predicate) !== -1);
           if (foundInStream && !options.inverse) {
             file.contents.removeAllListeners('end');
@@ -47,7 +46,7 @@ function grepFailPlugin (predicates, options) {
             cb(new PluginError(PLUGIN_NAME, util.format('\'%s\' does not contain \'%s\'.', file.path, predicate)));
             return true
           }
-        }.bind(this));
+        }.bind(this)) || hasFailed;
       });
 
       file.contents.on('end', function () {
